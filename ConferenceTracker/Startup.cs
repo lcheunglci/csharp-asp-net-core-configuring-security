@@ -32,6 +32,7 @@ namespace ConferenceTracker
             services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase("ConferenceTracker"));
             services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
+            services.Configure<CookiePolicyOptions>(options => { options.CheckConsentNeeded = context => true; options.MinimumSameSitePolicy = SameSiteMode.None; });
             services.AddControllersWithViews();
             services.AddRazorPages();
             services.AddTransient<IPresentationRepository, PresentationRepository>();
@@ -39,9 +40,10 @@ namespace ConferenceTracker
             services.AddCors(options => {
                 options.AddPolicy(_allowedOrigins, builder =>
                 {
-                builder.WithOrigins("http://plurasight.com");
+                    builder.WithOrigins("http://pluralsight.com");
                 });
             });
+            SecretMessage = Configuration["SecretMessage"];
 
         }
 
@@ -53,7 +55,7 @@ namespace ConferenceTracker
             using (var context = scope.ServiceProvider.GetService<ApplicationDbContext>())
                 context.Database.EnsureCreated();
 
-            app.UseCors(); ;
+            app.UseCors(_allowedOrigins); ;
             app.UseHttpsRedirection();
             if (env.IsDevelopment())
             {
@@ -69,6 +71,7 @@ namespace ConferenceTracker
 
             app.UseStaticFiles();
 
+            app.UseCookiePolicy();
             app.UseRouting();
 
             app.UseAuthentication();
